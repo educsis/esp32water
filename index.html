@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Water Level Monitor</title>
+</head>
+<body>
+  <h1>Water Level Monitor</h1>
+  <p>Current Water Level: <span id="level">--</span>%</p>
+
+  <script>
+    async function fetchWaterLevel(){
+      try {
+        const res = await fetch('/.netlify/functions/waterData');
+        const data = await res.json();
+        document.getElementById('level').innerText = data.latestLevel;
+      } catch (err) {
+        console.error("Error fetching water level:", err);
+      }
+    }
+
+    setInterval(fetchWaterLevel, 2000); // every 2 seconds
+    fetchWaterLevel();
+  </script>
+</body>
+</html>
