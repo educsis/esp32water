@@ -1,19 +1,52 @@
-export async function handler(event, context) {
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Water Level Monitor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    #level {
+      font-size: 4em;
+      color: blue;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>💧 Water Level Monitor</h1>
+  <p>Latest reading:</p>
+  <div id="level">-- %</div>
 
-  try {
-    const data = JSON.parse(event.body);
-    console.log("Received water level:", data.level);
+  <script>
+    async function fetchWaterLevel() {
+      try {
+        const res = await fetch('/.netlify/functions/waterData');
+        const data = await res.json();
 
-    // Optional: store in a database, file, or log
-    // For testing, we just return the same data
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: "Data received", receivedLevel: data.level }),
-    };
-  } catch (err) {
-    return { statusCode: 400, body: "Invalid JSON" };
-  }
-}
+        // If your function returns multiple records
+        // pick the most recent one
+        const latest = data.records ? data.records[0] : null;
+
+        if (latest) {
+          document.getElementById('level').innerText = latest.level + " %";
+        } else {
+          document.getElementById('level').innerText = "No data yet";
+        }
+
+        console.log("Fetched data:", data);
+      } catch (err) {
+        console.error("Error fetching water level:", err);
+        document.getElementById('level').innerText = "Error ❌";
+      }
+    }
+
+    // Run every 5 seconds
+    setInterval(fetchWaterLevel, 5000);
+    fetchWaterLevel();
+  </script>
+</body>
+</html>
