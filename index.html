@@ -105,16 +105,27 @@
           document.getElementById("water").style.height = level + "%";
           document.getElementById("levelText").innerText = level + " %";
 
+          // Después de actualizar el tank y el texto
+            if (level < 10) {
+                document.getElementById("levelText").innerText = level + " % ⚠️ LOW!";
+                document.getElementById("levelText").style.color = "red";
+                document.getElementById("water").style.background = "linear-gradient(to top, #ff3333, #ff9999)";
+            } else {
+                document.getElementById("levelText").style.color = "#0077cc";
+                document.getElementById("water").style.background = "linear-gradient(to top, #00aaff, #66ddee)";
+            }
+
+
           // Save & update chart
           const history = saveToHistory(level);
           chart.data.labels = history.map(h => h.time);
           chart.data.datasets[0].data = history.map(h => h.level);
           chart.update();
         } else {
-          document.getElementById("levelText").innerText = "No data yet";
+          document.getElementById("levelText").innerText = "Aún no hay data";
         }
       } catch (err) {
-        console.error("Error fetching water level:", err);
+        console.error("Error:", err);
         document.getElementById("levelText").innerText = "Error ❌";
       }
     }
