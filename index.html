@@ -1,26 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Water Level Monitor</title>
-</head>
-<body>
-  <h1>Water Level Monitor</h1>
-  <p>Current Water Level: <span id="level">--</span>%</p>
+export async function handler(event, context) {
+  if (event.httpMethod !== "POST") {
+    return { statusCode: 405, body: "Method Not Allowed" };
+  }
 
-  <script>
-    async function fetchWaterLevel(){
-      try {
-        const res = await fetch('/.netlify/functions/waterData');
-        const data = await res.json();
-        document.getElementById('level').innerText = data.latestLevel;
-      } catch (err) {
-        console.error("Error fetching water level:", err);
-      }
-    }
+  try {
+    const data = JSON.parse(event.body);
+    console.log("Received water level:", data.level);
 
-    setInterval(fetchWaterLevel, 2000); // every 2 seconds
-    fetchWaterLevel();
-  </script>
-</body>
-</html>
+    // Optional: store in a database, file, or log
+    // For testing, we just return the same data
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Data received", receivedLevel: data.level }),
+    };
+  } catch (err) {
+    return { statusCode: 400, body: "Invalid JSON" };
+  }
+}
