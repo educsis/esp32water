@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nivel de agua</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    #level {
+      font-size: 4em;
+      color: blue;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>💧 Nivel de Agua</h1>
+  <p>Última lectura:</p>
+  <div id="level">-- %</div>
+
+  <script>
+    async function fetchWaterLevel() {
+      try {
+        const res = await fetch('/.netlify/functions/waterData');
+        const data = await res.json();
+
+        if (data.latestLevel !== null) {
+          document.getElementById('level').innerText = data.latestLevel + " %";
+        } else {
+          document.getElementById('level').innerText = "No data";
+        }
+
+        console.log("Fetched data:", data);
+      } catch (err) {
+        console.error("Error de lectura:", err);
+        document.getElementById('level').innerText = "Error ❌";
+      }
+    }
+
+    // Poll every 3 seconds
+    setInterval(fetchWaterLevel, 3000);
+    fetchWaterLevel();
+  </script>
+</body>
+</html>

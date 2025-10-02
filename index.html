@@ -2,45 +2,124 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Nivel de agua</title>
+  <title>Water Tank Monitor</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 40px;
+      background: #f0f8ff;
     }
-    #level {
-      font-size: 4em;
-      color: blue;
-      margin-top: 20px;
+    h1 {
+      color: #0077cc;
+    }
+    /* Tank Container */
+    .tank {
+      width: 150px;
+      height: 300px;
+      border: 4px solid #333;
+      border-radius: 10px;
+      margin: 20px auto;
+      position: relative;
+      background: #e0e0e0;
+      overflow: hidden;
+    }
+    /* Water Level */
+    .water {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: linear-gradient(to top, #00aaff, #66ddee);
+      transition: height 1s ease-in-out;
+    }
+    #levelText {
+      font-size: 2em;
+      margin-top: 10px;
+      color: #0077cc;
+    }
+    canvas {
+      max-width: 500px;
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
-  <h1>💧 Nivel de Agua</h1>
-  <p>Última lectura:</p>
-  <div id="level">-- %</div>
+  <h1>💧 Water Tank Monitor</h1>
+
+  <!-- Tank -->
+  <div class="tank">
+    <div class="water" id="water" style="height:0%"></div>
+  </div>
+  <div id="levelText">-- %</div>
+
+  <!-- Chart -->
+  <canvas id="historyChart"></canvas>
 
   <script>
+    // === Local Storage Setup ===
+    function saveToHistory(value) {
+      let history = JSON.parse(localStorage.getItem("waterHistory")) || [];
+      history.push({ time: new Date().toLocaleTimeString(), level: value });
+      if (history.length > 20) history.shift(); // keep only last 20
+      localStorage.setItem("waterHistory", JSON.stringify(history));
+      return history;
+    }
+
+    function getHistory() {
+      return JSON.parse(localStorage.getItem("waterHistory")) || [];
+    }
+
+    // === Chart.js Setup ===
+    const ctx = document.getElementById("historyChart").getContext("2d");
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: getHistory().map(h => h.time),
+        datasets: [{
+          label: "Water Level (%)",
+          data: getHistory().map(h => h.level),
+          borderColor: "#0077cc",
+          backgroundColor: "rgba(0,119,204,0.2)",
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { min: 0, max: 100 }
+        }
+      }
+    });
+
+    // === Update UI with new data ===
     async function fetchWaterLevel() {
       try {
-        const res = await fetch('/.netlify/functions/waterData');
+        const res = await fetch("/.netlify/functions/waterData");
         const data = await res.json();
+        const level = data.latestLevel;
 
-        if (data.latestLevel !== null) {
-          document.getElementById('level').innerText = data.latestLevel + " %";
+        if (level !== null) {
+          // Update tank
+          document.getElementById("water").style.height = level + "%";
+          document.getElementById("levelText").innerText = level + " %";
+
+          // Save & update chart
+          const history = saveToHistory(level);
+          chart.data.labels = history.map(h => h.time);
+          chart.data.datasets[0].data = history.map(h => h.level);
+          chart.update();
         } else {
-          document.getElementById('level').innerText = "No data";
+          document.getElementById("levelText").innerText = "No data yet";
         }
-
-        console.log("Fetched data:", data);
       } catch (err) {
-        console.error("Error de lectura:", err);
-        document.getElementById('level').innerText = "Error ❌";
+        console.error("Error fetching water level:", err);
+        document.getElementById("levelText").innerText = "Error ❌";
       }
     }
 
-    // Poll every 3 seconds
+    // Poll every 3s
     setInterval(fetchWaterLevel, 3000);
     fetchWaterLevel();
   </script>
