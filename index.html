@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Water Level Monitor</title>
+  <title>Nivel de agua</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -30,12 +30,12 @@
         if (data.latestLevel !== null) {
           document.getElementById('level').innerText = data.latestLevel + " %";
         } else {
-          document.getElementById('level').innerText = "No data yet";
+          document.getElementById('level').innerText = "No data";
         }
 
         console.log("Fetched data:", data);
       } catch (err) {
-        console.error("Error fetching water level:", err);
+        console.error("Error de lectura:", err);
         document.getElementById('level').innerText = "Error ❌";
       }
     }
