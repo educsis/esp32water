@@ -99,7 +99,7 @@
         const res = await fetch("/.netlify/functions/waterData");
         const data = await res.json();
         const level = data.latestLevel;
-
+        console.log(data)
         if (level !== null) {
           // Update tank
           document.getElementById("water").style.height = level + "%";
