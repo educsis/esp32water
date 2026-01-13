@@ -63,6 +63,7 @@ function getLatestWaterLevel() {
           console.error('Error getting latest data:', err);
           reject(err);
         } else {
+          console.log('Latest row from database:', row);
           resolve(row);
         }
       }
@@ -80,6 +81,7 @@ function getAllWaterLevels(limit = 100) {
           console.error('Error getting all data:', err);
           reject(err);
         } else {
+          console.log(`Retrieved ${rows.length} rows from database`);
           resolve(rows);
         }
       }
@@ -131,6 +133,21 @@ export async function handler(event, context) {
     if (event.httpMethod === "GET") {
       const queryParams = event.queryStringParameters || {};
       
+      // Add test data endpoint
+      if (queryParams.test === 'true') {
+        // Insert test data
+        const testLevel = Math.floor(Math.random() * 100);
+        const insertId = await insertWaterLevel(testLevel);
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ 
+            message: "Test data inserted", 
+            level: testLevel,
+            recordId: insertId 
+          }),
+        };
+      }
+      
       if (queryParams.all === 'true') {
         // Return all records (limited to 100 by default)
         const limit = parseInt(queryParams.limit) || 100;
@@ -145,6 +162,21 @@ export async function handler(event, context) {
       } else {
         // Return latest record
         const latestLevel = await getLatestWaterLevel();
+        console.log('Fetched latest level:', latestLevel);
+        
+        if (!latestLevel) {
+          // No data found, let's check if table exists and has any data
+          return {
+            statusCode: 200,
+            body: JSON.stringify({ 
+              latestLevel: null,
+              timestamp: null,
+              data: null,
+              message: "No data found in database. Send some data via POST first."
+            }),
+          };
+        }
+        
         return {
           statusCode: 200,
           body: JSON.stringify({ 
