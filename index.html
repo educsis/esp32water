@@ -156,9 +156,6 @@
       return JSON.parse(localStorage.getItem("waterHistory")) || [];
     }
 
-    // === Chart.js Setup ===
-    const ctx = document.getElementById("historyChart").getContext("2d");
-    const chart = new Chart(ctx, {
       type: "line",
       data: {
         labels: getHistory().map(h => h.time),
