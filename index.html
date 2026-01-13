@@ -42,6 +42,71 @@
       max-width: 500px;
       margin-top: 30px;
     }
+    
+    /* Table Styles */
+    .records-section {
+      margin-top: 30px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .records-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .records-table th,
+    .records-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .records-table th {
+      background-color: #0077cc;
+      color: white;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.9em;
+    }
+    
+    .records-table tr:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .records-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    
+    .level-value {
+      font-weight: bold;
+      color: #0077cc;
+    }
+    
+    .level-low {
+      color: #ff3333;
+    }
+    
+    .refresh-btn {
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+    
+    .refresh-btn:hover {
+      background-color: #005599;
+    }
   </style>
 </head>
 <body>
@@ -55,6 +120,27 @@
 
   <!-- Chart -->
   <canvas id="historyChart"></canvas>
+
+  <!-- Recent Records Table -->
+  <div class="records-section">
+    <h2>📊 Últimos 10 Registros</h2>
+    <button class="refresh-btn" onclick="fetchRecentRecords()">🔄 Actualizar Tabla</button>
+    <table class="records-table" id="recordsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nivel (%)</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+        </tr>
+      </thead>
+      <tbody id="recordsTableBody">
+        <tr>
+          <td colspan="4" style="text-align: center; padding: 20px;">Cargando registros...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <script>
     // === Local Storage Setup ===
@@ -93,6 +179,50 @@
       }
     });
 
+    // === Fetch Recent Records ===
+    async function fetchRecentRecords() {
+      try {
+        const res = await fetch("/.netlify/functions/waterData?all=true&limit=10");
+        const data = await res.json();
+        
+        const tableBody = document.getElementById("recordsTableBody");
+        
+        if (data.data && data.data.length > 0) {
+          tableBody.innerHTML = data.data.map((record, index) => {
+            const date = new Date(record.timestamp);
+            const levelClass = record.level < 10 ? 'level-value level-low' : 'level-value';
+            
+            return `
+              <tr>
+                <td>${index + 1}</td>
+                <td><span class="${levelClass}">${record.level}%</span></td>
+                <td>${date.toLocaleDateString('es-ES')}</td>
+                <td>${date.toLocaleTimeString('es-ES')}</td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 20px; color: #666;">
+                No hay registros disponibles
+              </td>
+            </tr>
+          `;
+        }
+      } catch (err) {
+        console.error("Error fetching records:", err);
+        const tableBody = document.getElementById("recordsTableBody");
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; padding: 20px; color: #ff3333;">
+              Error al cargar registros ❌
+            </td>
+          </tr>
+        `;
+      }
+    }
+
     // === Update UI with new data ===
     async function fetchWaterLevel() {
       try {
@@ -130,9 +260,13 @@
       }
     }
 
-    // Poll every 3s
+    // Poll every 3s and refresh table every 30s
     setInterval(fetchWaterLevel, 3000);
+    setInterval(fetchRecentRecords, 30000);
+    
+    // Initial load
     fetchWaterLevel();
+    fetchRecentRecords();
   </script>
 </body>
 </html>
