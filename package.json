@@ -1,0 +1,16 @@
+{
+  "name": "esp32water",
+  "version": "1.0.0",
+  "description": "ESP32 water level monitoring system",
+  "main": "index.html",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step required'"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "netlify-cli": "^15.0.0"
+  }
+}
