@@ -1,12 +1,8 @@
 import sqlite3 from 'sqlite3';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { join } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Initialize SQLite database
-const dbPath = join(__dirname, '../../water_levels.db');
+// Initialize SQLite database - use a simpler path approach for Netlify
+const dbPath = '/tmp/water_levels.db'; // Use tmp directory for Netlify Functions
 let db;
 
 function initDatabase() {
